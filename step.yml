@@ -1,0 +1,104 @@
+title: Claude Code
+summary: Run Claude AI with a prompt and get the response
+description: |-
+  Installs Claude Code CLI and runs it with the provided prompt.
+  Outputs the response as an environment variable and a file.
+website: https://github.com/bitrise-steplib/bitrise-step-claude-code
+source_code_url: https://github.com/bitrise-steplib/bitrise-step-claude-code
+support_url: https://github.com/bitrise-steplib/bitrise-step-claude-code
+
+type_tags:
+- utility
+
+toolkit:
+  go:
+    package_name: github.com/bitrise-steplib/bitrise-step-claude-code
+
+inputs:
+- prompt: null
+  opts:
+    title: Prompt
+    summary: The prompt to pass to Claude
+    description: |-
+      The prompt to send to Claude Code. This is required.
+    is_required: true
+    is_sensitive: false
+
+- api_key: $ANTHROPIC_API_KEY
+  opts:
+    title: Anthropic API Key
+    summary: API key for authenticating with the Anthropic API
+    description: |-
+      Your Anthropic API key. Defaults to the `ANTHROPIC_API_KEY` environment
+      variable, so setting that as a Secret in Bitrise is the recommended approach.
+    is_required: true
+    is_sensitive: true
+
+- allowed_tools: Read,Write,Edit
+  opts:
+    title: Allowed Tools
+    summary: Comma-separated list of tools Claude is allowed to use
+    description: |-
+      Comma-separated list of tool names Claude is permitted to use.
+      Maps to the `--allowed-tools` CLI flag.
+      Example: `Read,Write,Edit,Bash`
+    is_required: false
+
+- agents: none
+  opts:
+    title: Agents
+    summary: Agent configuration for Claude
+    description: |-
+      Maps to the `--agents` CLI flag. Use `none` to use the default
+      (prompt-only) mode.
+    is_required: false
+    value_options:
+    - none
+    - computer-use
+
+- bitrise_token: null
+  opts:
+    title: Bitrise Token
+    summary: Bitrise Personal Access Token or Workspace Access Token for MCP access
+    description: |-
+      Optional Bitrise PAT or WAT. When set, the step automatically configures
+      the Bitrise MCP server so Claude can interact with Bitrise APIs.
+    is_required: false
+    is_sensitive: true
+
+- additional_cli_flags: null
+  opts:
+    title: Additional CLI Flags
+    summary: Extra flags appended to the claude invocation
+    description: |-
+      Any additional raw flags to pass to the `claude` command.
+      These are appended after all other flags.
+      Example: `--max-turns 5 --verbose`
+    is_required: false
+
+- claude_version: latest
+  opts:
+    title: Claude Code Version
+    summary: Version of Claude Code CLI to install
+    description: |-
+      The version of Claude Code CLI to install. Use `latest` to always install
+      the newest release, or pin to a specific version (e.g. `2.1.45`) for
+      reproducibility. Also accepts `stable`.
+    is_required: true
+
+outputs:
+- CLAUDE_OUTPUT:
+  opts:
+    title: Claude Output
+    summary: Claude's response (truncated to 20KB if longer)
+    description: |-
+      The full text response from Claude. Truncated to 20KB if the response
+      exceeds that limit. Use `CLAUDE_OUTPUT_FILE` for the full untruncated output.
+
+- CLAUDE_OUTPUT_FILE:
+  opts:
+    title: Claude Output File
+    summary: Absolute path to a temp file containing the full untruncated output
+    description: |-
+      Absolute path to a temporary file containing Claude's complete response,
+      without any truncation.
