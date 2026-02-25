@@ -17,9 +17,11 @@ func TestBuildClaudeArgs_BasicPrompt(t *testing.T) {
 	args, err := buildClaudeArgs(input, "")
 	require.NoError(t, err)
 
-	require.GreaterOrEqual(t, len(args), 2)
-	assert.Equal(t, "--print", args[0])
-	assert.Equal(t, "Say hello", args[1])
+	require.GreaterOrEqual(t, len(args), 4)
+	assert.Equal(t, "--output-format", args[0])
+	assert.Equal(t, "stream-json", args[1])
+	assert.Equal(t, "--verbose", args[2])
+	assert.Equal(t, "Say hello", args[3])
 }
 
 func TestBuildClaudeArgs_AllowedTools(t *testing.T) {
