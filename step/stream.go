@@ -71,6 +71,8 @@ func parseStream(r io.Reader, logger log.Logger) (string, error) {
 					} else {
 						logger.Printf("%s %s", colorstring.Green("⏺"), item.Name)
 					}
+        default:
+            logger.Printf("%s", item.Text)
 				}
 			}
 		case "user":
@@ -101,6 +103,8 @@ func parseStream(r io.Reader, logger log.Logger) (string, error) {
 			logger.Printf("%s Completed in %.0fs (%d turns, $%.4f)",
 				colorstring.Green("⏺"), durationSec, event.NumTurns, event.TotalCostUSD)
 			finalOutput = strings.TrimSpace(event.Result)
+    default:
+      logger.Printf("Unrecognized event: %s", line)
 		}
 	}
 

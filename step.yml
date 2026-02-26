@@ -76,6 +76,21 @@ inputs:
       Example: `--max-turns 5 --verbose`
     is_required: false
 
+- log_format: pretty
+  opts:
+    title: Log Format
+    summary: Controls how Claude's output is formatted in the build log
+    description: |-
+      `pretty` (default): Parses the real-time stream and formats it to resemble Claude Code's terminal UI.
+      Intermediate steps and tool calls are shown in real time as they happen.
+
+      `raw`: Output is buffered and printed after Claude
+      finishes, with no output parsing. Only the final response is printed.
+    is_required: true
+    value_options:
+    - pretty
+    - raw
+
 - claude_version: latest
   opts:
     title: Claude Code Version
