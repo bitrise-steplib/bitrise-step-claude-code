@@ -1,16 +1,28 @@
 package step
 
 import (
+	"bytes"
 	"fmt"
+	"io"
+	"os"
+	"strings"
 
 	"github.com/bitrise-io/go-utils/v2/command"
 	shellquote "github.com/kballard/go-shellquote"
 )
 
 func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
-	// --print enables non-interactive mode (print result and exit).
-	// The prompt is the positional [prompt] argument, not a value of --print.
-	args := []string{"--print", input.Prompt}
+	var args []string
+	if input.LogFormat == "raw" {
+		// --print: non-interactive mode that buffers and prints the final response.
+		// No JSON parsing needed — safe fallback if the stream-json format ever changes.
+		args = []string{"--print", input.Prompt}
+	} else {
+		// --output-format stream-json enables non-interactive mode with real-time NDJSON events,
+		// giving visibility into tool calls and assistant text as they happen.
+		// --verbose is required alongside --output-format stream-json (CLI enforces this).
+		args = []string{"--output-format", "stream-json", "--verbose", input.Prompt}
+	}
 
 	if input.AllowedTools != "" {
 		args = append(args, "--allowed-tools", input.AllowedTools)
@@ -35,9 +47,71 @@ func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
 	return args, nil
 }
 
-func (s *Step) runClaude(args []string, apiKey string) (string, error) {
+func (s *Step) runClaude(args []string, input Input) (string, error) {
 	s.logger.Infof("Running Claude...")
+	s.logger.Println()
 
+	if input.LogFormat == "raw" {
+		return s.runClaudeRaw(args, input.APIKey)
+	}
+	return s.runClaudeStreaming(args, input.APIKey)
+}
+
+func (s *Step) runClaudeStreaming(args []string, apiKey string) (string, error) {
+	pipeReader, pipeWriter := io.Pipe()
+
+	type streamResult struct {
+		output string
+		err    error
+	}
+	ch := make(chan streamResult, 1)
+
+	go func() {
+		output, err := parseStream(pipeReader, s.logger)
+		ch <- streamResult{output, err}
+	}()
+
+	// Tee stderr to both os.Stderr (so it appears in the build log in real-time) and a
+	// buffer. The buffer lets us attach the CLI's error message to the returned Go error —
+	// otherwise the cause ends up floating somewhere earlier in the log, disconnected from
+	// the error that actually fails the step. This matters especially for CLI startup errors
+	// (bad flags, version mismatches, etc.) that exit before emitting any NDJSON events,
+	// which would otherwise surface only as the generic "no result received from Claude".
+	var stderrBuf bytes.Buffer
+	cmd := s.commandFactory.Create("claude", args, &command.Opts{
+		Stdout: pipeWriter,
+		Stderr: io.MultiWriter(os.Stderr, &stderrBuf),
+		Env:    []string{"ANTHROPIC_API_KEY=" + apiKey},
+	})
+
+	if err := cmd.Start(); err != nil {
+		pipeWriter.CloseWithError(err)
+		<-ch
+		return "", fmt.Errorf("start claude: %w", err)
+	}
+
+	cmdErr := cmd.Wait()
+	pipeWriter.Close()
+
+	result := <-ch
+
+	if result.err != nil {
+		if stderrBuf.Len() > 0 {
+			return "", fmt.Errorf("%w\n%s", result.err, strings.TrimSpace(stderrBuf.String()))
+		}
+		return "", result.err
+	}
+	if cmdErr != nil {
+		if stderrBuf.Len() > 0 {
+			return "", fmt.Errorf("claude exited with error: %w\n%s", cmdErr, strings.TrimSpace(stderrBuf.String()))
+		}
+		return "", fmt.Errorf("claude exited with error: %w", cmdErr)
+	}
+
+	return result.output, nil
+}
+
+func (s *Step) runClaudeRaw(args []string, apiKey string) (string, error) {
 	cmd := s.commandFactory.Create("claude", args, &command.Opts{
 		Env: []string{"ANTHROPIC_API_KEY=" + apiKey},
 	})
@@ -46,6 +120,5 @@ func (s *Step) runClaude(args []string, apiKey string) (string, error) {
 	if err != nil {
 		return "", fmt.Errorf("claude exited with error: %w", err)
 	}
-
 	return output, nil
 }

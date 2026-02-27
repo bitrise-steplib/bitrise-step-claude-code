@@ -19,6 +19,7 @@ type Input struct {
 	BitriseToken       string `env:"bitrise_token"`
 	AdditionalCLIFlags string `env:"additional_cli_flags"`
 	ClaudeVersion      string `env:"claude_version,required"`
+	LogFormat          string `env:"log_format,opt[pretty,raw]"`
 }
 
 type Step struct {
@@ -76,7 +77,7 @@ func (s *Step) Run() error {
 		return fmt.Errorf("build claude args: %w", err)
 	}
 
-	output, err := s.runClaude(args, input.APIKey)
+	output, err := s.runClaude(args, input)
 	if err != nil {
 		return fmt.Errorf("run claude: %w", err)
 	}

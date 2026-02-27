@@ -30,6 +30,7 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | `agents` | Maps to the `--agents` CLI flag. Use `none` to use the default (prompt-only) mode. |  | `none` |
 | `bitrise_token` | Optional Bitrise PAT or WAT. When set, the step automatically configures the Bitrise MCP server so Claude can interact with Bitrise APIs. | sensitive |  |
 | `additional_cli_flags` | Any additional raw flags to pass to the `claude` command. These are appended after all other flags. Example: `--max-turns 5 --verbose` |  |  |
+| `log_format` | `pretty` (default): Parses the real-time stream and formats it to resemble Claude Code's terminal UI. Intermediate steps and tool calls are shown in real time as they happen.  `raw`: Output is buffered and printed after Claude finishes, with no output parsing. Only the final response is printed. | required | `pretty` |
 | `claude_version` | The version of Claude Code CLI to install. Use `latest` to always install the newest release, or pin to a specific version (e.g. `2.1.45`) for reproducibility. Also accepts `stable`. | required | `latest` |
 </details>
 
