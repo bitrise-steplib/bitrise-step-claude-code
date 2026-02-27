@@ -12,6 +12,7 @@ import (
 )
 
 type Input struct {
+	Model              string `env:"model,required"`
 	Prompt             string `env:"prompt,required"`
 	APIKey             string `env:"api_key,required"`
 	AllowedTools       string `env:"allowed_tools"`

@@ -15,6 +15,16 @@ toolkit:
     package_name: github.com/bitrise-steplib/bitrise-step-claude-code
 
 inputs:
+- model: claude-haiku-4-5
+  opts:
+    title: Model
+    summary: Claude model ID to use
+    description: |-
+      The Claude model ID ID to use. Defaults to the Haiku model family for cost efficiency.
+
+      See the full list of model IDs: https://platform.claude.com/docs/en/about-claude/models/overview
+    is_required: true
+
 - prompt: null
   opts:
     title: Prompt
