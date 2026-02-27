@@ -42,6 +42,31 @@ func TestBuildClaudeArgs_RawLogFormat(t *testing.T) {
 	assert.NotContains(t, args, "--output-format")
 }
 
+func TestBuildClaudeArgs_Model(t *testing.T) {
+	input := Input{
+		Prompt: "hello",
+		APIKey: "sk-test",
+		Model:  "claude-sonnet-4-6",
+	}
+
+	args, err := buildClaudeArgs(input, "")
+	require.NoError(t, err)
+
+	assertContainsSequence(t, args, "--model", "claude-sonnet-4-6")
+}
+
+func TestBuildClaudeArgs_NoModel(t *testing.T) {
+	input := Input{
+		Prompt: "hello",
+		APIKey: "sk-test",
+	}
+
+	args, err := buildClaudeArgs(input, "")
+	require.NoError(t, err)
+
+	assert.NotContains(t, args, "--model")
+}
+
 func TestBuildClaudeArgs_AllowedTools(t *testing.T) {
 	input := Input{
 		Prompt:       "hello",

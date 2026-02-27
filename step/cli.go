@@ -24,6 +24,10 @@ func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
 		args = []string{"--output-format", "stream-json", "--verbose", input.Prompt}
 	}
 
+	if input.Model != "" {
+		args = append(args, "--model", input.Model)
+	}
+
 	if input.AllowedTools != "" {
 		args = append(args, "--allowed-tools", input.AllowedTools)
 	}
