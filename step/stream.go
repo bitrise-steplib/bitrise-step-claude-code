@@ -54,6 +54,11 @@ func parseStream(r io.Reader, logger log.Logger) (string, error) {
 			continue
 		}
 
+		if event.Type == "system" && event.Subtype == "init" {
+			// Not interesting + don't warn about unrecognized event type.
+			continue
+		}
+
 		switch event.Type {
 		case "assistant":
 			if event.Message == nil {
