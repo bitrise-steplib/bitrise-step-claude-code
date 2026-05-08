@@ -57,14 +57,24 @@ inputs:
 - agents: none
   opts:
     title: Agents
-    summary: Agent configuration for Claude
+    summary: Built-in agent or custom agent JSON for Claude
     description: |-
-      Maps to the `--agents` CLI flag. Use `none` to use the default
-      (prompt-only) mode.
+      Select a built-in agent or provide custom agent JSON.
+      Built-in agents ship with tailored system prompts and automatically
+      enable the MCP servers they need.
+
+      Built-in agents:
+      - `code-review`: Reviews code changes for bugs, security, and style
+      - `test-failure-analysis`: Analyzes test failures and suggests fixes
+      - `screenshot-generator`: Drives the app and captures store screenshots
+      Use `none` for prompt-only mode (no agent). You can also pass a raw
+      JSON object to define a custom agent (same schema as `--agents` CLI flag).
     is_required: false
     value_options:
     - none
-    - computer-use
+    - code-review
+    - test-failure-analysis
+    - screenshot-generator
 
 - bitrise_token: null
   opts:

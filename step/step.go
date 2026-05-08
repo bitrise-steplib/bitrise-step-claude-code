@@ -1,6 +1,7 @@
 package step
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -64,16 +65,49 @@ func (s *Step) Run() error {
 		return fmt.Errorf("update PATH: %w", err)
 	}
 
+	// Resolve agent definition (built-in name, custom JSON, or none)
+	agentDef, isBuiltin := getAgentDefinition(input.Agents)
+
+	// Detect platform for MCP server selection
+	workDir, err := os.Getwd()
+	if err != nil {
+		return fmt.Errorf("get working dir: %w", err)
+	}
+	platform := detectPlatform(workDir)
+
+	// Resolve MCP servers
+	mcpServers := resolveMCPServers(agentDef, platform, input.BitriseToken)
+
 	var mcpConfigPath string
-	if input.BitriseToken != "" {
-		mcpConfigPath, err = writeMCPConfig(input.BitriseToken)
+	if len(mcpServers) > 0 {
+		cfg := buildMCPConfig(mcpServers)
+		mcpConfigPath, err = writeMCPConfigFile(cfg)
 		if err != nil {
 			return fmt.Errorf("write MCP config: %w", err)
 		}
 		defer os.Remove(mcpConfigPath)
+
+		for name := range mcpServers {
+			s.logger.Infof("MCP server enabled: %s", name)
+		}
 	}
 
-	args, err := buildClaudeArgs(input, mcpConfigPath)
+	// Resolve agents input for CLI args
+	var agentsJSON string
+	if isBuiltin {
+		agents := map[string]AgentDefinition{input.Agents: agentDef}
+		data, err := json.Marshal(agents)
+		if err != nil {
+			return fmt.Errorf("marshal agent definition: %w", err)
+		}
+		agentsJSON = string(data)
+		s.logger.Infof("Using built-in agent: %s", input.Agents)
+	} else if input.Agents != "" && input.Agents != "none" {
+		// Custom JSON pass-through
+		agentsJSON = input.Agents
+	}
+
+	args, err := buildClaudeArgs(input, mcpConfigPath, agentsJSON)
 	if err != nil {
 		return fmt.Errorf("build claude args: %w", err)
 	}

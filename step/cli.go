@@ -11,7 +11,7 @@ import (
 	shellquote "github.com/kballard/go-shellquote"
 )
 
-func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
+func buildClaudeArgs(input Input, mcpConfigPath string, agentsJSON string) ([]string, error) {
 	var args []string
 	if input.LogFormat == "raw" {
 		// --print: non-interactive mode that buffers and prints the final response.
@@ -32,8 +32,8 @@ func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
 		args = append(args, "--allowed-tools", input.AllowedTools)
 	}
 
-	if input.Agents != "" && input.Agents != "none" {
-		args = append(args, "--agents", input.Agents)
+	if agentsJSON != "" {
+		args = append(args, "--agents", agentsJSON)
 	}
 
 	if mcpConfigPath != "" {
