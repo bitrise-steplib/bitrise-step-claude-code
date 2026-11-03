@@ -11,17 +11,20 @@ import (
 	shellquote "github.com/kballard/go-shellquote"
 )
 
+// buildClaudeArgs leaves out the prompt, which goes to stdin instead. As an argument it would be
+// parsed as an option when starting with "-", hit the 128 KiB per-argument limit on Linux and be
+// echoed in command error messages.
 func buildClaudeArgs(input Input, mcpConfigPath string) ([]string, error) {
 	var args []string
 	if input.LogFormat == "raw" {
 		// --print: non-interactive mode that buffers and prints the final response.
 		// No JSON parsing needed — safe fallback if the stream-json format ever changes.
-		args = []string{"--print", input.Prompt}
+		args = []string{"--print"}
 	} else {
 		// --output-format stream-json enables non-interactive mode with real-time NDJSON events,
 		// giving visibility into tool calls and assistant text as they happen.
 		// --verbose is required alongside --output-format stream-json (CLI enforces this).
-		args = []string{"--output-format", "stream-json", "--verbose", input.Prompt}
+		args = []string{"--output-format", "stream-json", "--verbose"}
 	}
 
 	if input.Model != "" {
@@ -56,12 +59,12 @@ func (s *Step) runClaude(args []string, input Input) (string, error) {
 	s.logger.Println()
 
 	if input.LogFormat == "raw" {
-		return s.runClaudeRaw(args, input.APIKey)
+		return s.runClaudeRaw(args, input.Prompt, input.APIKey)
 	}
-	return s.runClaudeStreaming(args, input.APIKey)
+	return s.runClaudeStreaming(args, input.Prompt, input.APIKey)
 }
 
-func (s *Step) runClaudeStreaming(args []string, apiKey string) (string, error) {
+func (s *Step) runClaudeStreaming(args []string, prompt, apiKey string) (string, error) {
 	pipeReader, pipeWriter := io.Pipe()
 
 	type streamResult struct {
@@ -83,6 +86,7 @@ func (s *Step) runClaudeStreaming(args []string, apiKey string) (string, error) 
 	// which would otherwise surface only as the generic "no result received from Claude".
 	var stderrBuf bytes.Buffer
 	cmd := s.commandFactory.Create("claude", args, &command.Opts{
+		Stdin:  strings.NewReader(prompt),
 		Stdout: pipeWriter,
 		Stderr: io.MultiWriter(os.Stderr, &stderrBuf),
 		Env:    []string{"ANTHROPIC_API_KEY=" + apiKey},
@@ -115,9 +119,10 @@ func (s *Step) runClaudeStreaming(args []string, apiKey string) (string, error) 
 	return result.output, nil
 }
 
-func (s *Step) runClaudeRaw(args []string, apiKey string) (string, error) {
+func (s *Step) runClaudeRaw(args []string, prompt, apiKey string) (string, error) {
 	cmd := s.commandFactory.Create("claude", args, &command.Opts{
-		Env: []string{"ANTHROPIC_API_KEY=" + apiKey},
+		Stdin: strings.NewReader(prompt),
+		Env:   []string{"ANTHROPIC_API_KEY=" + apiKey},
 	})
 
 	output, err := cmd.RunAndReturnTrimmedCombinedOutput()
