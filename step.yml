@@ -30,9 +30,24 @@ inputs:
     title: Prompt
     summary: The prompt to pass to Claude
     description: |-
-      The prompt to send to Claude Code. This is required.
-    is_required: true
+      The prompt to send to Claude Code.
+
+      Set either `prompt` or `prompt_file`, otherwise the step fails.
+    is_required: false
     is_sensitive: false
+
+- prompt_file: null
+  opts:
+    title: Prompt File
+    summary: Path to a text or Markdown file whose content is the prompt
+    description: |-
+      Path to a text or Markdown file used as the prompt, relative to the source directory.
+
+      `$NAME` and `${NAME}` in the file are replaced with the variable's value if it is set.
+      Unset variables and other `$` text are not modified.
+
+      Set either `prompt` or `prompt_file`, otherwise the step fails.
+    is_required: false
 
 - api_key: $ANTHROPIC_API_KEY
   opts:
