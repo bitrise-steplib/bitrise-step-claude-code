@@ -18,11 +18,7 @@ func TestBuildClaudeArgs_BasicPrompt(t *testing.T) {
 	args, err := buildClaudeArgs(input, "")
 	require.NoError(t, err)
 
-	require.GreaterOrEqual(t, len(args), 4)
-	assert.Equal(t, "--output-format", args[0])
-	assert.Equal(t, "stream-json", args[1])
-	assert.Equal(t, "--verbose", args[2])
-	assert.Equal(t, "Say hello", args[3])
+	assert.Equal(t, []string{"--output-format", "stream-json", "--verbose"}, args)
 }
 
 func TestBuildClaudeArgs_RawLogFormat(t *testing.T) {
@@ -36,10 +32,7 @@ func TestBuildClaudeArgs_RawLogFormat(t *testing.T) {
 	args, err := buildClaudeArgs(input, "")
 	require.NoError(t, err)
 
-	require.GreaterOrEqual(t, len(args), 2)
-	assert.Equal(t, "--print", args[0])
-	assert.Equal(t, "Say hello", args[1])
-	assert.NotContains(t, args, "--output-format")
+	assert.Equal(t, []string{"--print"}, args)
 }
 
 func TestBuildClaudeArgs_Model(t *testing.T) {

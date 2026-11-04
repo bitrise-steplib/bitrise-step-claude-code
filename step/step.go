@@ -13,7 +13,8 @@ import (
 
 type Input struct {
 	Model              string `env:"model,required"`
-	Prompt             string `env:"prompt,required"`
+	Prompt             string `env:"prompt"`
+	PromptFile         string `env:"prompt_file"`
 	APIKey             string `env:"api_key,required"`
 	AllowedTools       string `env:"allowed_tools"`
 	Agents             string `env:"agents"`
@@ -48,6 +49,13 @@ func (s *Step) Run() error {
 	}
 
 	stepconf.Print(input)
+
+	prompt, promptSource, err := resolvePrompt(input, os.LookupEnv)
+	if err != nil {
+		return fmt.Errorf("resolve prompt: %w", err)
+	}
+	input.Prompt = prompt
+	s.logger.Infof("Prompt source: %s", promptSource)
 
 	if err := s.installClaude(input.ClaudeVersion); err != nil {
 		return fmt.Errorf("install claude: %w", err)

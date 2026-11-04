@@ -25,7 +25,8 @@ You can also run this step directly with [Bitrise CLI](https://github.com/bitris
 | Key | Description | Flags | Default |
 | --- | --- | --- | --- |
 | `model` | The Claude model ID ID to use. Defaults to the Haiku model family for cost efficiency.  See the full list of model IDs: https://platform.claude.com/docs/en/about-claude/models/overview | required | `claude-haiku-4-5` |
-| `prompt` | The prompt to send to Claude Code. This is required. | required |  |
+| `prompt` | The prompt to send to Claude Code.  Set either `prompt` or `prompt_file`, otherwise the step fails. |  |  |
+| `prompt_file` | Path to a text or Markdown file used as the prompt, relative to the source directory.  `$NAME` and `${NAME}` in the file are replaced with the variable's value if it is set. Unset variables and other `$` text are not modified.  Set either `prompt` or `prompt_file`, otherwise the step fails. |  |  |
 | `api_key` | Your Anthropic API key. Defaults to the `ANTHROPIC_API_KEY` environment variable, so setting that as a Secret in Bitrise is the recommended approach. | required, sensitive | `$ANTHROPIC_API_KEY` |
 | `allowed_tools` | Comma-separated list of tool names Claude is permitted to use. Maps to the `--allowed-tools` CLI flag. Example: `Read,Write,Edit,Bash` |  | `Read,Write,Edit` |
 | `agents` | Maps to the `--agents` CLI flag. Use `none` to use the default (prompt-only) mode. |  | `none` |
